@@ -1,0 +1,54 @@
+COMP 4300 - Assignment 02 Architecture
+
+#############################################
+# Components: CTransform, CCollision, CScore
+------------
+- Pure Data
+- Stored in Entity
+- Each Component is its own class
+- Each implements intuitive Entity `feature`
+
+# Entity
+--------
+- Entity = Game Object
+- Stores Component Pointers
+  - shared_ptr
+- Tag = Entity `type` (player|enemy|bullet)
+- Active = Alive or Dead
+- ID = Integer Identifier
+- Note: * is shared_ptr for A02
+
+# EntityManager
+---------------
+- Entity `Factory` Class
+- Delayed Entity Add()
+  - Iterator Invalidation
+- Secondary map from tag->entity
+  - Trade storage for convenience / run time
+- Can do other book-keeping like memory management
+
+# Game
+------
+- Top-Level Game Object
+- Holds all game data
+- All game system functions
+- All gameplay code
+
+### What can this engine do?
+----------------------------
+- Create game object as Entity instances
+- Add Component data to Entities
+- Implement game play via Systems
+  - Also, handle user input
+- Pause game play / exit game
+- Can init / load configuration from file
+
+### What are the limitation?
+----------------------------
+- Can only display one `scene`
+- Can NOT load texture / sound assets
+- Can NOT display textured animations
+- Does not have any menu or interface
+#############################################
+
+#############################################

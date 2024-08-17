@@ -1,0 +1,95 @@
+COMP 4300 - Assignment 02 Architecture
+
+## Explanations in arch_info.txt
+
++++++++++++++++++++++++++++++++
+== Game ==
+-------------------------------
+- m_window:     sf::RenderWindow
+- m_entities:   EntityManager
+- m_player:     Entity
+- m_paused:     bool
+- m_running:    bool
+-------------------------------
+- init: void
++ update: void
+
+// Systems
+- sMovement():      void
+- sUserInput():     void
+- sRender():        void
+- sEnemySpawner():  void
+- sCollision():     void
+-------------------------------
+
++++++++++++++++++++++++++++++++
+== EntityManager ==
+-------------------------------
+- m_entities:   vector<Entity>
+- m_entityMap:  map<string, Entity>
+- m_toAdd:      vector<Entity>
+-------------------------------
+- init:             void
++ update:           void
++ addEntity(args):  sp<Entity>
++ getEntities():    vector<sp<Entity>>&
++ getEntities(s):   vector<sp<Entity>>&
+-------------------------------
+
++++++++++++++++++++++++++++++++
+== Entity ==
+-------------------------------
+- m_tag:        string
+- m_active:     bool
+- m_id:         size_t
+
++ cTransform:   CTransform*
++ cShape:       CShape*
++ cCollision:   CCollision*
++ cInput:       CInput*
++ cScore:       CScore*
++ cLifespan:    CLifespan*
+-------------------------------
++ destroy():    void
++ isActive():   bool
++ tag():        string&
++ id():         size_t
+-------------------------------
+
++++++++++++++++++++++++++++++++
+== CTransform ==
+-------------------------------
++ pos:      vec2
++ speed:    vec2
++ scale:    vec2
++ angle:    double
+-------------------------------
+
++++++++++++++++++++++++++++++++
+== CCollision ==
+-------------------------------
+- radius:   float
+-------------------------------
+
++++++++++++++++++++++++++++++++
+== CScore ==
+-------------------------------
+- score:    int
+-------------------------------
+
++++++++++++++++++++++++++++++++
+== Vec2 ==
+-------------------------------
++ x:    double
++ y:    double
+-------------------------------
++ operator ==:      bool
++ operator !=:      bool
++ operator +:       Vec2
++ operator -:       Vec2
++ operator *:       Vec2
++ operator /:       Vec2
+
++ normalize:        void
++ length:           double
+-------------------------------

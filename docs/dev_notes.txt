@@ -1,0 +1,15 @@
+
+if (ImGui::Button("Destroy"))
+{
+    // NOTE: If all buttons have the same name, gui thinks it is a
+    // one object. Thus, it's better to add 2 hashes afther the label
+    // e.g. Button("Destroy##ID1")
+    // Button("Destroy##12") and Button("Destroy##34") will have
+    // eventually the same label visible "Destroy".
+
+    for (auto e: entities)
+    {
+        // e = Entity();
+        e->destroy();
+    }
+}
