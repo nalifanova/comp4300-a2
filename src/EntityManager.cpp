@@ -26,9 +26,9 @@ void EntityManager::removeDeadEntities(EntityVec& vec)
 
 std::shared_ptr<Entity> EntityManager::addEntity(const std::string& tag)
 {
-    // initially
-    // auto entity = std::shared_ptr<Entity>(new Entity(m_totalEntities++, tag));
-    auto entity = std::make_shared<Entity>(m_totalEntities++, tag);
+    // initially (Entity constructor and destructor should be private)
+    auto entity = std::shared_ptr<Entity>(new Entity(m_totalEntities++, tag));
+    // auto entity = std::make_shared<Entity>(m_totalEntities++, tag);
 
     m_entitiesToAdd.push_back(entity);
 

@@ -5,6 +5,8 @@
 #include <string>
 #include "Components.h"
 
+class EntityManager;
+
 class Entity
 {
 public:
@@ -14,13 +16,16 @@ public:
     [[nodiscard]] size_t id() const;
     void destroy();
 
-//private:
     // constructor and destructor
     Entity(size_t id, const std::string& tag);
     ~Entity() = default;
 private:
     // constructor and destructor should be private
-    // but it causes the issue (TODO: find out)
+    /* but it causes the issue (TODO: find out)
+    ~EntityManager.cpp:30:19:
+        error: no matching conversion for functional-style cast from 'Entity *' to 'std::shared_ptr<Entity>'
+        auto entity = std::shared_ptr<Entity>(new Entity(m_totalEntities++, tag));
+     */
 public:
     // component pointers
     std::shared_ptr<CTransform> cTransform;
