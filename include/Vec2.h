@@ -15,12 +15,14 @@ public:
     Vec2 operator /(float val) const;
     Vec2 operator *(float val) const;
 
-    bool operator +=(const Vec2& rhs) const;
-    bool operator -=(const Vec2& rhs) const;
-    bool operator *=(float val) const;
-    bool operator /=(float val) const;
+    bool operator +=(const Vec2& rhs);
+    bool operator -=(const Vec2& rhs);
+    bool operator *=(float val);
+    bool operator /=(float val);
 
     [[nodiscard]] float dist(const Vec2& rhs) const;
+    [[nodiscard]] float length() const;
+    void normalize();
 
     float x = 0;
     float y = 0;

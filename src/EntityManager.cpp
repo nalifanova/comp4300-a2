@@ -1,10 +1,13 @@
 #include "EntityManager.h"
-
+#include <iostream>
 void EntityManager::update()
 {
-    // TODO: add entities from m_entitiesToAdd to the proper location(s)
-    //      - add them to the vector of all entities
-    //      - add them to the vector inside the map, with the tag as a key
+    for (auto& e: m_entitiesToAdd)
+    {
+        m_entities.push_back(e);
+        m_entityMap[e->tag()].push_back(e);
+    }
+    m_entitiesToAdd.clear(); // free entities after adding them to ^^
 
     // remove dead entities from the vector of all entities
     removeDeadEntities(m_entities);
@@ -21,7 +24,13 @@ void EntityManager::removeDeadEntities(EntityVec& vec)
 {
     // TODO: remove all dead entities from the input vector
     //       this is called by the update() function
-    // Note: think of iteration invalidation!
+    vec.erase(
+        std::remove_if(vec.begin(), vec.end(),
+                       [](const std::shared_ptr<Entity>& entity)
+                       {
+                           return !entity->isActive();
+                       }),
+        vec.end());
 }
 
 std::shared_ptr<Entity> EntityManager::addEntity(const std::string& tag)

@@ -1,4 +1,4 @@
-# include "Game.h"
+#include "Game.h"
 
 Game::Game(const std::string& config)
 {
@@ -11,7 +11,7 @@ void Game::init(const std::string& path)
     //       use the premade PlayerConfig, EnemyConfig, BulletConfig variables
 
     // set up default window parameters
-    m_window.create(sf::VideoMode(1280, 720), "Assigment 02");
+    m_window.create(sf::VideoMode(1200, 620), "Assigment 02");
     m_window.setFramerateLimit(60);
 
     std::ignore = ImGui::SFML::Init(m_window);
@@ -27,15 +27,19 @@ void Game::run()
 
     while (m_running)
     {
-        // update the entity manager
-        m_entities.update();
+        if (!m_paused)
+        {
+            // update the entity manager
+            m_entities.update();
+
+            sEnemySpawner();
+            sMovement();
+            sCollision();
+        }
 
         // required update call to imgui
         ImGui::SFML::Update(m_window, m_deltaClock.restart());
 
-        sEnemySpawner();
-        sMovement();
-        sCollision();
         sUserInput();
         sGUI();
         sRender();
@@ -48,7 +52,7 @@ void Game::run()
 
 void Game::setPaused(bool paused)
 {
-    // TODO
+    m_paused = paused;
 }
 
 // respawn the player in the middle of the screen
@@ -66,6 +70,9 @@ void Game::spawnPlayer()
     // The entity's shape will have radius 32, 8 sides, dark gray fill, and red outline of thickness 4
     entity->cShape = std::make_shared<CShape>(32.0f, 8, sf::Color(10, 10, 10), sf::Color(255, 0, 0), 4.0f);
 
+    // collision shape
+    entity->cCollision = std::make_shared<CCollision>(32);
+
     // Add an input component to the player so that we can use inputs
     entity->cInput = std::make_shared<CInput>();
 
@@ -78,6 +85,22 @@ void Game::spawnEnemy()
 {
     // TODO: make sure the enemy is spawned properly with the m_enemyConfig variables
     //       the enemy must be spawned completely within the bounds of the window
+
+    auto entity = m_entities.addEntity("enemy");
+    int vertices = 3;
+    entity->cTransform = std::make_shared<CTransform>(Vec2(intRand(100, 800) * 1.0f, intRand(50, 400) * 1.0f)
+                                                    , Vec2(1.0f, 1.0f), 2.0f);
+
+    // Enemy 32 32 3 3 255 255 255 2 3 8 90 60
+    entity->cShape = std::make_shared<CShape>(32.0f, vertices, sf::Color(255, 255, 255), sf::Color(0, 255, 0), 4.0f);
+    entity->cShape->circle.setPosition(entity->cTransform->pos.x, entity->cTransform->pos.y);
+
+    entity->cCollision = std::make_shared<CCollision>(32.0f);
+    entity->cScore = std::make_shared<CScore>(vertices * 100);
+
+    std::cout << "entity: " << entity->tag() << ", id = " << entity->id()
+        << ", pos(" << entity->cShape->circle.getPosition().x << ", "
+        << entity->cShape->circle.getPosition().x << ")\n";
 
     // record when the most recent enemy was spawned
     m_lastEnemySpawnTime = m_currentFrame;
@@ -108,12 +131,15 @@ void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
 
 void Game::sMovement()
 {
+    m_checkBoundaries();
+
     // TODO: implement all entity movement in this function
     //       you should read the m_player->cInput component to determine if the player is moving
 
     // Sample movement speed update
     m_player->cTransform->pos.x += m_player->cTransform->velocity.x;
     m_player->cTransform->pos.y += m_player->cTransform->velocity.y;
+
 }
 
 void Game::sLifespan()
@@ -139,12 +165,66 @@ void Game::sCollision()
 void Game::sEnemySpawner()
 {
     // TODO: code which implements enemy spawning should go here
+    if (m_currentFrame - m_lastEnemySpawnTime >= 10)
+    {
+        if (m_entities.getEntities().size() <= 20)
+        {
+            spawnEnemy();
+        }
+    }
 }
 
 void Game::sGUI()
 {
     ImGui::Begin("Geometry Wars");
-    ImGui::Text("Stuff goes here");
+
+    ImGui::ShowDemoWindow();
+    const char* names[2] = {"Systems", "Entity Manager"};
+    static bool opened[2] = {true, true}; // Persistent user state
+
+    if (ImGui::BeginTabBar("DebugTabBar", true))
+    {
+        for (int n = 0; n < IM_ARRAYSIZE(opened); n++)
+            if (opened[n] && ImGui::BeginTabItem(names[n], &opened[n], ImGuiTabItemFlags_None))
+            {
+                if (n == 0)
+                {
+                    ImGui::Text("This is the %s tab!", names[n]);
+                    ImGui::BulletText("Movement");
+                    ImGui::BulletText("Lifespan");
+                    ImGui::BulletText("Collision");
+                    ImGui::BulletText("Spawning");
+                    ImGui::BulletText("Rendering");
+                }
+                else
+                {
+                    if (ImGui::TreeNode("Entities by Tag"))
+                    {
+                        for (auto& [tag, EntityVector]: m_entities.getEntityMap())
+                        {
+                            if (ImGui::CollapsingHeader(tag.c_str()))
+                            {
+                                for (auto& el: EntityVector)
+                                    m_getEntityInfo(el);
+                            }
+                        }
+                        ImGui::TreePop();
+                    }
+
+                    if (ImGui::TreeNode("All Entities"))
+                    {
+                        for (auto& e: m_entities.getEntities())
+                        {
+                            m_getEntityInfo(e);
+                            ImGui::TreePop();
+                        }
+                    }
+                }
+                ImGui::EndTabItem();
+            }
+        ImGui::EndTabBar();
+    }
+
     ImGui::End();
 }
 
@@ -163,7 +243,13 @@ void Game::sRender()
     m_player->cShape->circle.setRotation(m_player->cTransform->angle);
 
     // draw the entity's sf::CircleShape
-    m_window.draw(m_player->cShape->circle);
+    for (const auto& el: m_entities.getEntities())
+    {
+        m_window.draw(el->cShape->circle);
+    }
+
+    m_text.setString("Score: " + std::to_string(m_score));
+    m_window.draw(m_text);
 
     // draw the ui last
     ImGui::SFML::Render(m_window);
@@ -195,9 +281,23 @@ void Game::sUserInput()
         {
             switch (event.key.code)
             {
+                case sf::Keyboard::Escape:
+                    m_running = false;
+                    break;
                 case sf::Keyboard::W:
-                    std::cout << "W key pressed \n";
-                // TODO: set player's input component "up" to true
+                    m_player->cInput->up = true;
+                    break;
+                case sf::Keyboard::A:
+                    m_player->cInput->left = true;
+                    break;
+                case sf::Keyboard::S:
+                    m_player->cInput->down = true;
+                    break;
+                case sf::Keyboard::D:
+                    m_player->cInput->right = true;
+                    break;
+                case sf::Keyboard::P:
+                    m_paused = !m_paused;
                     break;
                 default:
                     break;
@@ -210,9 +310,17 @@ void Game::sUserInput()
             switch (event.key.code)
             {
                 case sf::Keyboard::W:
-                    std::cout << "W key pressed \n";
-                // TODO: set player's input component "up" to false
-                break;
+                    m_player->cInput->up = false;
+                    break;
+                case sf::Keyboard::A:
+                    m_player->cInput->left = false;
+                    break;
+                case sf::Keyboard::S:
+                    m_player->cInput->down = false;
+                    break;
+                case sf::Keyboard::D:
+                    m_player->cInput->right = false;
+                    break;
                 default:
                     break;
             }
@@ -221,24 +329,71 @@ void Game::sUserInput()
         if (event.type == sf::Event::MouseButtonPressed)
         {
             // this line ignores mouse events if ImGui is the thing being clicked
-            if (ImGui::GetIO().WantCaptureMouse) {continue;}
+            if (ImGui::GetIO().WantCaptureMouse) { continue; }
 
             if (event.mouseButton.button == sf::Mouse::Left)
             {
-                std::cout << "Left mouse button clickec at (" << event.mouseButton.x << ", " <<  event.mouseButton.x
-                << ")\n";
+                std::cout << "Left mouse button clicked at (" << event.mouseButton.x << ", " << event.mouseButton.x
+                    << ")\n";
                 // call spawnBullet here
             }
 
             if (event.mouseButton.button == sf::Mouse::Right)
             {
-                std::cout << "Left mouse button clickec at (" << event.mouseButton.x << ", " <<  event.mouseButton.x
-                << ")\n";
+                std::cout << "Left mouse button clicked at (" << event.mouseButton.x << ", " << event.mouseButton.x
+                    << ")\n";
                 // call spawnSpecialWeapon here
             }
 
         }
-
-
     }
+}
+
+void Game::m_checkBoundaries()
+{
+    const auto position = m_player->cShape->circle.getPosition();
+    const auto bounds = m_player->cShape->circle.getLocalBounds();
+
+    // check width boundaries
+    if (position.x + 0.5 * bounds.width >= static_cast<float>(m_window.getSize().x)
+        || position.x <= 0.5 * bounds.width)
+    {
+        m_player->cTransform->velocity.x *= -1.0f;
+    }
+
+    // check height boundaries
+    if (position.y + 0.5 * bounds.height >= static_cast<float>(m_window.getSize().y)
+        || position.y <= 0.5 * bounds.height)
+    {
+        m_player->cTransform->velocity.y *= -1.0f;
+    }
+}
+
+// GUI debug
+
+std::string Game::m_getTextLine(const std::shared_ptr<Entity>& entity)
+{
+    const auto circle = entity->cShape->circle;
+    const std::string entityText = "\t" + std::to_string(entity->id()) + "\t" + entity->tag()
+        + "\t(" + std::to_string(static_cast<int>(circle.getPosition().x)) + ", "
+        + std::to_string(static_cast<int>(circle.getPosition().y)) + ")\n";
+    return entityText;
+}
+
+void Game::m_getEntityInfo(const std::shared_ptr<Entity>& entity)
+{
+    const auto entityText = m_getTextLine(entity);
+    std::string label = "D##" + std::to_string(entity->id());
+    if (ImGui::Button(label.c_str()))
+    {
+        std::cout << "I clicked on the button " << label << "\n";
+        entity->destroy();
+    }
+    ImGui::SameLine();
+    ImGui::Text("%s", entityText.c_str());
+}
+
+int Game::intRand(const int min, const int max)
+{
+    return min + rand() % (1 + max - min);
 }

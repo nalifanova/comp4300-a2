@@ -56,6 +56,12 @@ public:
     void sUserInput();
 
 private:
+    void m_checkBoundaries();
+    void m_getCollapsingHeaders();
+    static std::string m_getTextLine(const std::shared_ptr<Entity>& entity);
+    static void m_getEntityInfo(const std::shared_ptr<Entity>& entity);
+    [[nodiscard]] static int intRand(int min, int max);
+
     sf::RenderWindow m_window; // the window we will draw to
     EntityManager m_entities; // vector of entities to maintain
     sf::Font m_font; // the font we will use to draw
@@ -69,6 +75,7 @@ private:
     int m_score = 0;
     int m_currentFrame = 0; /// ??????
     bool m_running = true;
+    bool m_paused = false;
     int m_lastEnemySpawnTime = 0;
     std::shared_ptr<Entity> m_player;
 };
