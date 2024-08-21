@@ -178,7 +178,7 @@ void Game::sGUI()
 {
     ImGui::Begin("Geometry Wars");
 
-    ImGui::ShowDemoWindow();
+    // ImGui::ShowDemoWindow();
     const char* names[2] = {"Systems", "Entity Manager"};
     static bool opened[2] = {true, true}; // Persistent user state
 
@@ -190,7 +190,7 @@ void Game::sGUI()
                 if (n == 0)
                 {
                     ImGui::Text("This is the %s tab!", names[n]);
-                    ImGui::BulletText("Movement");
+                    ImGui::Checkbox("Movement", &m_paused);
                     ImGui::BulletText("Lifespan");
                     ImGui::BulletText("Collision");
                     ImGui::BulletText("Spawning");
@@ -216,8 +216,8 @@ void Game::sGUI()
                         for (auto& e: m_entities.getEntities())
                         {
                             m_getEntityInfo(e);
-                            ImGui::TreePop();
                         }
+                        ImGui::TreePop();
                     }
                 }
                 ImGui::EndTabItem();
@@ -248,7 +248,15 @@ void Game::sRender()
         m_window.draw(el->cShape->circle);
     }
 
+    // DEBUG
+    if (!m_font.loadFromFile("../../assets/fonts/tech.ttf"))
+    {
+        std::cerr << "Could not load font!\n";
+        exit(-1);
+    }
+    m_text.setFont(m_font);
     m_text.setString("Score: " + std::to_string(m_score));
+    m_text.setFillColor(sf::Color::White);
     m_window.draw(m_text);
 
     // draw the ui last
