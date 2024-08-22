@@ -143,7 +143,7 @@ Lines will be given in that order, with the following syntax:
 
 ### Enemy specification:
 
-#### Enemy SR CR SMIN SMAX OR OG OB OT VMIN VMAX L SI
+#### Enemy SR CR SMIN SMAX OR OG OB OT VMIN VMAX L SP
 
 ```text
    Shape Radius             SR      int
@@ -158,7 +158,7 @@ Lines will be given in that order, with the following syntax:
 
 ### Bullet Specification:
 
-#### Bullet SR CR S FR FG FB OR OG OB OT VL
+#### Bullet SR CR S FR FG FB OR OG OB OT V L
 
 ```text
    Shape Radius             SR      int

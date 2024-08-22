@@ -1,5 +1,11 @@
 #include "Game.h"
 
+#include <fstream>
+#include <random>
+#include <type_traits>
+
+#include "FileUtils.h"
+
 Game::Game(const std::string& config)
 {
     init(config);
@@ -7,16 +13,68 @@ Game::Game(const std::string& config)
 
 void Game::init(const std::string& path)
 {
-    // TODO: read in config file here
-    //       use the premade PlayerConfig, EnemyConfig, BulletConfig variables
+    const auto filePath = getFullPath(path);
+    std::cout << "Contig file: " << filePath << "\n";
+    std::ifstream fin(filePath);
+    std::string token = "none";
+
+    while (fin >> token)
+    {
+        // Window W H FL FS
+        if (token == "Window")
+        {
+            fin >> m_windowConfig.width >> m_windowConfig.height >> m_windowConfig.framerate
+                >> m_windowConfig.fullscreen;
+        }
+        // Font F S R G B
+        else if (token == "Font")
+        {
+            fin >> m_fontConfig.filepath >> m_fontConfig.size
+                >> m_fontConfig.red >> m_fontConfig.green >> m_fontConfig.blue;
+        }
+        // Player SR CR S FR FG FB OR OG OB OT V
+        else if (token == "Player")
+        {
+            fin >> m_playerConfig.SR >> m_playerConfig.CR >> m_playerConfig.S
+                >> m_playerConfig.FR >> m_playerConfig.FG >> m_playerConfig.FB
+                >> m_playerConfig.OR >> m_playerConfig.OG >> m_playerConfig.OB
+                >> m_playerConfig.OT >> m_playerConfig.V;
+        }
+        // Enemy SR CR SMIN SMAX OR OG OB OT VMIN VMAX L SP
+        else if (token == "Enemy")
+        {
+            fin >> m_enemyConfig.SR >> m_enemyConfig.CR >> m_enemyConfig.SMIN >> m_enemyConfig.SMAX
+                >> m_enemyConfig.OR >> m_enemyConfig.OG >> m_enemyConfig.OB >> m_enemyConfig.OT
+                >> m_enemyConfig.VMIN >> m_enemyConfig.VMAX >> m_enemyConfig.L >> m_enemyConfig.SP;
+        }
+        // Bullet SR CR S FR FG FB OR OG OB OT V L
+        else if (token == "Bullet")
+        {
+            fin >> m_bulletConfig.SR >> m_bulletConfig.CR >> m_bulletConfig.S
+                >> m_bulletConfig.FR >> m_bulletConfig.FG >> m_bulletConfig.FB
+                >> m_bulletConfig.OR >> m_bulletConfig.OG >> m_bulletConfig.OB
+                >> m_bulletConfig.OT >> m_bulletConfig.V >> m_bulletConfig.L;
+        }
+    }
 
     // set up default window parameters
-    m_window.create(sf::VideoMode(1200, 620), "Assigment 02");
-    m_window.setFramerateLimit(60);
+    m_window.create(sf::VideoMode(m_windowConfig.width, m_windowConfig.height), "Assigment 02",
+                    m_windowConfig.fullscreen ? sf::Style::Fullscreen : sf::Style::Default);
+    m_window.setFramerateLimit(m_windowConfig.framerate);
+
+    // set up font
+    loadFont(m_font, m_fontConfig.filepath);
+
+    m_text.setFont(m_font);
+    m_text.setCharacterSize(m_fontConfig.size);
+    m_text.setFillColor(sf::Color(m_fontConfig.red, m_fontConfig.green, m_fontConfig.blue));
+    m_text.setString("Score: " + std::to_string(m_score));
 
     std::ignore = ImGui::SFML::Init(m_window);
 
     spawnPlayer();
+    // init random seed
+    srand(static_cast<int>(time(nullptr)));
 }
 
 void Game::run()
@@ -29,10 +87,9 @@ void Game::run()
     {
         if (!m_paused)
         {
-            // update the entity manager
             m_entities.update();
-
             sEnemySpawner();
+            sLifespan();
             sMovement();
             sCollision();
         }
@@ -50,7 +107,7 @@ void Game::run()
     }
 }
 
-void Game::setPaused(bool paused)
+void Game::setPaused(const bool paused)
 {
     m_paused = paused;
 }
@@ -58,20 +115,24 @@ void Game::setPaused(bool paused)
 // respawn the player in the middle of the screen
 void Game::spawnPlayer()
 {
-    // TODO: Finish adding all properties of the player with the correct values from t..
-
-    // We create every entity by calling EntityManager.addEntity(tag)
-    // This returns an std::shared_ptr<Entity>, so we use 'auto' to save typing
     auto entity = m_entities.addEntity("player");
 
-    // Give this entity a Transform so it spawns at (200, 200) with velicity (1, 1) and angle 0
-    entity->cTransform = std::make_shared<CTransform>(Vec2(200.0f, 200.0f), Vec2(1.0f, 1.0f), 0.0f);
+    //  --------- transform ---------
+    //The player must spawn in the center of the screen at the beginning of the game
+    auto position = Vec2(static_cast<float>(m_window.getSize().x) / 2.f,
+                         static_cast<float>(m_window.getSize().y) / 2.f);
+    entity->cTransform = std::make_shared<CTransform>(position, Vec2(0.0f, 0.0f), 0.0f);
+    std::cout << "Player position (" << (m_window.getSize().x / 2.f) << ", " << (m_window.getSize().y / 2.f) << ")\n";
 
-    // The entity's shape will have radius 32, 8 sides, dark gray fill, and red outline of thickness 4
-    entity->cShape = std::make_shared<CShape>(32.0f, 8, sf::Color(10, 10, 10), sf::Color(255, 0, 0), 4.0f);
+    // --------- shape ---------
+    auto fillColor = sf::Color(m_playerConfig.FR, m_playerConfig.FG, m_playerConfig.FB);
+    auto outlineColor = sf::Color(m_playerConfig.OR, m_playerConfig.OG, m_playerConfig.OB);
+    // radius, points - vertices
+    entity->cShape = std::make_shared<CShape>(m_playerConfig.SR, m_playerConfig.V,
+                                              fillColor, outlineColor, m_playerConfig.OT);
 
-    // collision shape
-    entity->cCollision = std::make_shared<CCollision>(32);
+    // --------- collisiton ---------
+    entity->cCollision = std::make_shared<CCollision>(m_playerConfig.CR);
 
     // Add an input component to the player so that we can use inputs
     entity->cInput = std::make_shared<CInput>();
@@ -83,24 +144,30 @@ void Game::spawnPlayer()
 
 void Game::spawnEnemy()
 {
-    // TODO: make sure the enemy is spawned properly with the m_enemyConfig variables
-    //       the enemy must be spawned completely within the bounds of the window
-
     auto entity = m_entities.addEntity("enemy");
-    int vertices = 3;
-    entity->cTransform = std::make_shared<CTransform>(Vec2(intRand(100, 800) * 1.0f, intRand(50, 400) * 1.0f)
-                                                    , Vec2(1.0f, 1.0f), 2.0f);
 
-    // Enemy 32 32 3 3 255 255 255 2 3 8 90 60
-    entity->cShape = std::make_shared<CShape>(32.0f, vertices, sf::Color(255, 255, 255), sf::Color(0, 255, 0), 4.0f);
-    entity->cShape->circle.setPosition(entity->cTransform->pos.x, entity->cTransform->pos.y);
+    // --------- transform ---------
+    const float x = random(m_enemyConfig.CR, m_windowConfig.width - m_enemyConfig.CR - 1);
+    const float y = random(m_enemyConfig.CR, m_windowConfig.height - m_enemyConfig.CR - 1);
 
-    entity->cCollision = std::make_shared<CCollision>(32.0f);
+    const float angle = random(0.0f, 3.1415f * 2.0f); // 2 * pi = 180'
+    Vec2 velocity(cos(angle), sin(angle));
+    velocity *= random(m_enemyConfig.SMIN, m_enemyConfig.SMAX);
+
+    entity->cTransform = std::make_shared<CTransform>(Vec2(static_cast<float>(x), static_cast<float>(y))
+                                                    , velocity, angle);
+    // --------- shape ---------
+    int vertices = random(m_enemyConfig.VMIN, m_enemyConfig.VMAX);
+    auto fillColor = sf::Color(random(0, 255), random(0, 255), random(0, 255));
+    auto outlineColor = sf::Color(m_enemyConfig.OR, m_enemyConfig.OG, m_enemyConfig.OB);
+
+    entity->cShape = std::make_shared<CShape>(m_enemyConfig.SR, vertices, fillColor, outlineColor,
+                                              m_enemyConfig.OT);
+    // --------- collision ---------
+    entity->cCollision = std::make_shared<CCollision>(m_enemyConfig.CR);
+
+    // --------- score ---------
     entity->cScore = std::make_shared<CScore>(vertices * 100);
-
-    std::cout << "entity: " << entity->tag() << ", id = " << entity->id()
-        << ", pos(" << entity->cShape->circle.getPosition().x << ", "
-        << entity->cShape->circle.getPosition().x << ")\n";
 
     // record when the most recent enemy was spawned
     m_lastEnemySpawnTime = m_currentFrame;
@@ -230,33 +297,18 @@ void Game::sGUI()
 
 void Game::sRender()
 {
-    // TODO: change the code below to draw ALL of the entities
-    //      sample drawing of the player Entity that we have created
     m_window.clear();
-
-    // -- here
-    // set the position of the shape based on the entity's transform->pos
-    m_player->cShape->circle.setPosition(m_player->cTransform->pos.x, m_player->cTransform->pos.y);
-
-    // set the rotation of the shape based on the entity's transform->angle
-    m_player->cTransform->angle += 1.0f;
-    m_player->cShape->circle.setRotation(m_player->cTransform->angle);
 
     // draw the entity's sf::CircleShape
     for (const auto& el: m_entities.getEntities())
     {
+        el->cShape->circle.setPosition(el->cTransform->pos.x, el->cTransform->pos.y);
+        el->cTransform->angle += 1.0f;
+        el->cShape->circle.setRotation(el->cTransform->angle);
+
         m_window.draw(el->cShape->circle);
     }
-
-    // DEBUG
-    if (!m_font.loadFromFile("../../assets/fonts/tech.ttf"))
-    {
-        std::cerr << "Could not load font!\n";
-        exit(-1);
-    }
-    m_text.setFont(m_font);
-    m_text.setString("Score: " + std::to_string(m_score));
-    m_text.setFillColor(sf::Color::White);
+    // display score
     m_window.draw(m_text);
 
     // draw the ui last
@@ -401,7 +453,18 @@ void Game::m_getEntityInfo(const std::shared_ptr<Entity>& entity)
     ImGui::Text("%s", entityText.c_str());
 }
 
-int Game::intRand(const int min, const int max)
+/**
+ * Divident / divisor = quotient
+ */
+template <typename T>
+T Game::random(const T min, const T max)
 {
-    return min + rand() % (1 + max - min);
+    // % works only with ints
+    int divisor = 1;
+    auto tmp = (1 + max - min);
+    if constexpr (std::is_integral<T>::value)
+        divisor = tmp;
+    if constexpr (std::is_floating_point<T>::value)
+        divisor = static_cast<int>(tmp);
+    return min + rand() % divisor;
 }

@@ -3,7 +3,7 @@
 #include <math.h>
 
 Vec2::Vec2(const float xIn, const float yIn):
-    x(xIn), y(xIn) {}
+    x(xIn), y(yIn) {}
 
 bool Vec2::operator==(const Vec2& rhs) const
 {

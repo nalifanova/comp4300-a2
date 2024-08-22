@@ -59,10 +59,12 @@ add_executable(${PROJECT_NAME}
     include/Vec2.h
     include/Entity.h
     include/EntityManager.h
+    include/FileUtils.h
     src/Game.cpp
     src/Vec2.cpp
     src/Entity.cpp
     src/EntityManager.cpp
+    src/FileUtils.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ImGui-SFML::ImGui-SFML)
