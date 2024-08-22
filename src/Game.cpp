@@ -45,7 +45,7 @@ void Game::init(const std::string& path)
         {
             fin >> m_enemyConfig.SR >> m_enemyConfig.CR >> m_enemyConfig.SMIN >> m_enemyConfig.SMAX
                 >> m_enemyConfig.OR >> m_enemyConfig.OG >> m_enemyConfig.OB >> m_enemyConfig.OT
-                >> m_enemyConfig.VMIN >> m_enemyConfig.VMAX >> m_enemyConfig.L >> m_enemyConfig.SP;
+                >> m_enemyConfig.VMIN >> m_enemyConfig.VMAX >> m_enemyConfig.L >> m_enemyConfig.SI;
         }
         // Bullet SR CR S FR FG FB OR OG OB OT V L
         else if (token == "Bullet")
@@ -184,11 +184,13 @@ void Game::spawnSmallEnemies(std::shared_ptr<Entity> entity)
     // - small enemies are worth double points of the original enemy
 }
 
-void Game::smawnBullet(std::shared_ptr<Entity> entity, const Vec2& target)
+void Game::spawnBullet(std::shared_ptr<Entity> entity, const Vec2& target)
 {
     // TODO: implement the spawning of a bullet which travels toward target
     //      - bullet speed is given as a scalar speed
     //      - you must set the velocity by using formula in notes
+    // DEBUG
+    std::cout << "Shoot in: (" << target.x << ", " << target.y << ")\n";
 }
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
@@ -198,11 +200,19 @@ void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
 
 void Game::sMovement()
 {
-    m_checkBoundaries();
+    // m_checkBoundaries();
 
     // TODO: implement all entity movement in this function
     //       you should read the m_player->cInput component to determine if the player is moving
 
+    for (auto& el: m_entities.getEntities())
+    {
+        el->cTransform->pos += el->cTransform->velocity;
+        el->cShape->circle.setPosition(el->cTransform->pos.x, el->cTransform->pos.y);
+        m_checkBoundaries(el);
+    }
+
+    m_checkBoundaries(m_player);
     // Sample movement speed update
     m_player->cTransform->pos.x += m_player->cTransform->velocity.x;
     m_player->cTransform->pos.y += m_player->cTransform->velocity.y;
@@ -220,6 +230,17 @@ void Game::sLifespan()
     //          scale its alpha channel properly
     //      of it has lifespan and its time is up
     //          destroy the entity
+    for (auto& el: m_entities.getEntities())
+    {
+        if (el->cLifespan)
+        {
+            el->cLifespan->remaining -= 1;
+            if (el->cLifespan->remaining <= 0)
+            {
+                el->destroy();
+            }
+        }
+    }
 }
 
 void Game::sCollision()
@@ -231,10 +252,9 @@ void Game::sCollision()
 
 void Game::sEnemySpawner()
 {
-    // TODO: code which implements enemy spawning should go here
-    if (m_currentFrame - m_lastEnemySpawnTime >= 10)
+    if (m_currentFrame - m_lastEnemySpawnTime >= m_enemyConfig.SI)
     {
-        if (m_entities.getEntities().size() <= 20)
+        if (m_entities.getEntities().size() <= 20) // FOR DEBUGGING
         {
             spawnEnemy();
         }
@@ -257,7 +277,7 @@ void Game::sGUI()
                 if (n == 0)
                 {
                     ImGui::Text("This is the %s tab!", names[n]);
-                    ImGui::Checkbox("Movement", &m_paused);
+                    ImGui::Checkbox("Paused", &m_paused); // Movement?
                     ImGui::BulletText("Lifespan");
                     ImGui::BulletText("Collision");
                     ImGui::BulletText("Spawning");
@@ -386,7 +406,7 @@ void Game::sUserInput()
             }
         }
 
-        if (event.type == sf::Event::MouseButtonPressed)
+        if (event.type == sf::Event::MouseButtonPressed && !m_paused)
         {
             // this line ignores mouse events if ImGui is the thing being clicked
             if (ImGui::GetIO().WantCaptureMouse) { continue; }
@@ -396,9 +416,14 @@ void Game::sUserInput()
                 std::cout << "Left mouse button clicked at (" << event.mouseButton.x << ", " << event.mouseButton.x
                     << ")\n";
                 // call spawnBullet here
+                for (auto& el: m_entities.getEntities("player"))
+                {
+                    spawnBullet(el, Vec2(event.mouseButton.x, event.mouseButton.y));
+                }
             }
 
-            if (event.mouseButton.button == sf::Mouse::Right)
+            auto deltaFrame = m_currentFrame - m_sWeapon.lastUsed;
+            if (event.mouseButton.button == sf::Mouse::Right && deltaFrame > m_sWeapon.countdown)
             {
                 std::cout << "Left mouse button clicked at (" << event.mouseButton.x << ", " << event.mouseButton.x
                     << ")\n";
@@ -409,23 +434,23 @@ void Game::sUserInput()
     }
 }
 
-void Game::m_checkBoundaries()
+void Game::m_checkBoundaries(std::shared_ptr<Entity>& entity) const
 {
-    const auto position = m_player->cShape->circle.getPosition();
-    const auto bounds = m_player->cShape->circle.getLocalBounds();
+    const auto position = entity->cShape->circle.getPosition();
+    const auto bounds = entity->cShape->circle.getLocalBounds();
 
-    // check width boundaries
+    // check width boundaries for player
     if (position.x + 0.5 * bounds.width >= static_cast<float>(m_window.getSize().x)
         || position.x <= 0.5 * bounds.width)
     {
-        m_player->cTransform->velocity.x *= -1.0f;
+        entity->cTransform->velocity.x *= -1.0f;
     }
 
     // check height boundaries
     if (position.y + 0.5 * bounds.height >= static_cast<float>(m_window.getSize().y)
         || position.y <= 0.5 * bounds.height)
     {
-        m_player->cTransform->velocity.y *= -1.0f;
+        entity->cTransform->velocity.y *= -1.0f;
     }
 }
 

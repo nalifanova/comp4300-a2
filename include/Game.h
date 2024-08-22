@@ -31,7 +31,7 @@ struct PlayerConfig
 
 struct EnemyConfig
 {
-    int SR, CR, OR, OG, OB, OT, VMIN, VMAX, L, SP;
+    int SR, CR, OR, OG, OB, OT, VMIN, VMAX, L, SI;
     float SMIN, SMAX;
 };
 
@@ -39,6 +39,12 @@ struct BulletConfig
 {
     int SR, CR, FR, FG, FB, OR, OG, OB, OT, V, L;
     float S;
+};
+
+struct SpecialWeapon
+{
+    int countdown = 0;
+    int lastUsed = 0;
 };
 
 class Game
@@ -57,7 +63,7 @@ public:
     void spawnEnemy();
     void spawnSmallEnemies(std::shared_ptr<Entity> entity);
 
-    void smawnBullet(std::shared_ptr<Entity> entity, const Vec2& target);
+    void spawnBullet(std::shared_ptr<Entity> entity, const Vec2& target);
     void spawnSpecialWeapon(std::shared_ptr<Entity> entity);
 
     void sMovement();
@@ -69,13 +75,14 @@ public:
     void sRender();
     void sUserInput();
 
+    template <typename T>
+    static T random(T min, T max);
+
 private:
-    void m_checkBoundaries();
+    void m_checkBoundaries(std::shared_ptr<Entity>& entity) const;
     void m_getCollapsingHeaders();
     static std::string m_getTextLine(const std::shared_ptr<Entity>& entity);
     static void m_getEntityInfo(const std::shared_ptr<Entity>& entity);
-    template <typename T>
-    static T random(T min, T max);
 
     sf::RenderWindow m_window;
     EntityManager m_entities;
@@ -95,6 +102,8 @@ private:
     bool m_paused = false;
     int m_lastEnemySpawnTime = 0;
     std::shared_ptr<Entity> m_player;
+
+    SpecialWeapon m_sWeapon;
 };
 
 #endif //GAME_H

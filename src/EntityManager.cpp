@@ -41,12 +41,12 @@ std::shared_ptr<Entity> EntityManager::addEntity(const std::string& tag)
     return entity;
 }
 
-const EntityVec& EntityManager::getEntities()
+EntityVec& EntityManager::getEntities()
 {
     return m_entities;
 }
 
-const EntityVec& EntityManager::getEntities(const std::string& tag)
+EntityVec& EntityManager::getEntities(const std::string& tag)
 {
     return m_entityMap[tag];
 }

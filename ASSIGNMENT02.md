@@ -143,7 +143,7 @@ Lines will be given in that order, with the following syntax:
 
 ### Enemy specification:
 
-#### Enemy SR CR SMIN SMAX OR OG OB OT VMIN VMAX L SP
+#### Enemy SR CR SMIN SMAX OR OG OB OT VMIN VMAX L SI
 
 ```text
    Shape Radius             SR      int
@@ -153,7 +153,7 @@ Lines will be given in that order, with the following syntax:
    Outline Thickness        OT      int
    Min / Max Vertices   VMIN, VMAX  int, int
    Small Lifespan            L      int
-   Spawn Interval           SP      int    
+   Spawn Interval           SI      int    
 ```
 
 ### Bullet Specification:

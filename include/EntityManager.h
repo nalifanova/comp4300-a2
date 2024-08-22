@@ -17,8 +17,8 @@ public:
     void update();
 
     std::shared_ptr<Entity> addEntity(const std::string& tag);
-    [[nodiscard]] const EntityVec& getEntities();
-    [[nodiscard]] const EntityVec& getEntities(const std::string& tag);
+    [[nodiscard]] EntityVec& getEntities();
+    [[nodiscard]] EntityVec& getEntities(const std::string& tag);
     [[nodiscard]] const EntityMap& getEntityMap();
 
 private:
