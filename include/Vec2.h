@@ -1,7 +1,7 @@
 #ifndef VEC2_H
 #define VEC2_H
 
-struct Vec2
+class Vec2
 {
 public:
     Vec2() = default;
@@ -22,10 +22,10 @@ public:
 
     [[nodiscard]] float dist(const Vec2& rhs) const;
     [[nodiscard]] float length() const;
-    void normalize();
+    [[nodiscard]] Vec2 normalize();
 
-    float x = 0;
-    float y = 0;
+    float x = 0.0f;
+    float y = 0.0f;
 };
 
 #endif //VEC2_H

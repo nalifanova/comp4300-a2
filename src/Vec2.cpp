@@ -76,12 +76,23 @@ float Vec2::dist(const Vec2& rhs) const
     return distance;
 }
 
+/**
+ * Vector length is a distance it travels from origin (0.0, 0.0) to
+ * desired destination        ___________
+ *                      L = \/ x^2 + y^2
+ */
 float Vec2::length() const
 {
     return sqrt(x * x + y * y);
 }
 
-void Vec2::normalize()
+/**
+ * Normalizing a vector maintains its angle but changes its length to 1
+ * (unit vector)
+ *      N = Vec2(V.x / L, V.y / L)
+ */
+Vec2 Vec2::normalize()
 {
-
+    *this = (length() == 0.0f) ? Vec2(0.0f, 0.0f) : *this / length();
+    return *this;
 }

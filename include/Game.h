@@ -79,10 +79,11 @@ public:
     static T random(T min, T max);
 
 private:
-    void m_checkBoundaries(std::shared_ptr<Entity>& entity) const;
-    void m_getCollapsingHeaders();
+    void m_checkBoundaries(const std::shared_ptr<Entity>& entity) const;
+    void m_checkCollision(const std::shared_ptr<Entity>& entity, const std::shared_ptr<Entity>& enemy);
     static std::string m_getTextLine(const std::shared_ptr<Entity>& entity);
     static void m_getEntityInfo(const std::shared_ptr<Entity>& entity);
+    void m_showFinalMessage();
 
     sf::RenderWindow m_window;
     EntityManager m_entities;
@@ -102,6 +103,8 @@ private:
     bool m_paused = false;
     int m_lastEnemySpawnTime = 0;
     std::shared_ptr<Entity> m_player;
+    int m_liveCounter = 0;
+    int m_totalLives = 5;
 
     SpecialWeapon m_sWeapon;
 };
