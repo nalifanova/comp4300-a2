@@ -1,8 +1,8 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include <memory>
 #include <string>
+
 #include "Components.h"
 
 class EntityManager;
@@ -10,22 +10,16 @@ class EntityManager;
 class Entity
 {
 public:
-    // private member access functions
+    ~Entity() = default;
+
     [[nodiscard]] bool isActive() const;
     [[nodiscard]] const std::string& tag() const;
     [[nodiscard]] size_t id() const;
     void destroy();
 
-    // constructor and destructor
-    Entity(size_t id, const std::string& tag);
-    ~Entity() = default;
 private:
-    // constructor and destructor should be private
-    /* but it causes the issue (TODO: find out)
-    ~EntityManager.cpp:30:19:
-        error: no matching conversion for functional-style cast from 'Entity *' to 'std::shared_ptr<Entity>'
-        auto entity = std::shared_ptr<Entity>(new Entity(m_totalEntities++, tag));
-     */
+    Entity(size_t id, const std::string& tag);
+
 public:
     // component pointers
     std::shared_ptr<CTransform> cTransform;
