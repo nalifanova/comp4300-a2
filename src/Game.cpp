@@ -322,10 +322,7 @@ void Game::sEnemySpawner()
 {
     if (m_currentFrame - m_lastEnemySpawnTime >= m_enemyConfig.SI)
     {
-        if (m_entities.getEntities().size() <= 20) // FOR DEBUGGING
-        {
-            spawnEnemy();
-        }
+        spawnEnemy();
     }
 }
 
@@ -454,6 +451,9 @@ void Game::sUserInput()
                 case sf::Keyboard::P:
                     m_control.isPaused = !m_control.isPaused;
                     break;
+                case sf::Keyboard::R:
+                    m_restartGame();
+                    break;
                 default:
                     break;
             }
@@ -494,9 +494,6 @@ void Game::sUserInput()
 
             if (event.mouseButton.button == sf::Mouse::Right && m_sWeapon.delta > m_sWeapon.cooldown)
             {
-                std::cout << "Left mouse button clicked at (" << event.mouseButton.x << ", " << event.mouseButton.x
-                    << ")\n";
-                // call spawnSpecialWeapon here
                 spawnSpecialWeapon(m_player);
             }
         }
@@ -564,28 +561,19 @@ void Game::m_checkCollision(const std::shared_ptr<Entity>& entity, const std::sh
     }
 }
 
-// GUI debug
-
-std::string Game::m_getTextLine(const std::shared_ptr<Entity>& entity)
+void Game::m_restartGame()
 {
-    const auto circle = entity->cShape->circle;
-    const std::string entityText = "\t" + std::to_string(entity->id()) + "\t" + entity->tag()
-        + "\t(" + std::to_string(static_cast<int>(circle.getPosition().x)) + ", "
-        + std::to_string(static_cast<int>(circle.getPosition().y)) + ")\n";
-    return entityText;
-}
-
-void Game::m_getEntityInfo(const std::shared_ptr<Entity>& entity)
-{
-    const auto entityText = m_getTextLine(entity);
-    std::string label = "D##" + std::to_string(entity->id());
-    if (ImGui::Button(label.c_str()))
+    for (auto& el: m_entities.getEntities())
     {
-        std::cout << "I clicked on the button " << label << "\n";
-        entity->destroy();
+        el->destroy();
     }
-    ImGui::SameLine();
-    ImGui::Text("%s", entityText.c_str());
+    m_liveCounter = 0;
+    m_currentFrame = 120;
+    m_sWeapon.lastUsed = 0;
+    m_sWeapon.delta = 0;
+    m_score = 0;
+    m_lastEnemySpawnTime = 0;
+    spawnPlayer();
 }
 
 void Game::m_showFinalMessage()
@@ -597,8 +585,16 @@ void Game::m_showFinalMessage()
     finalText.setCharacterSize(size);
     finalText.setFillColor(sf::Color::Red);
     finalText.setPosition(sf::Vector2f(static_cast<float>(m_windowConfig.width) / 2.0f - length * 2.4f,
-                                       static_cast<float>(m_windowConfig.height) / 2.0f - size / 2.0f));
+                                       static_cast<float>(m_windowConfig.height) / 2.0f - size * 2.0f));
     m_window.draw(finalText);
+
+    auto restartMsg = m_text;
+    restartMsg.setString("Press `R` to restart the game");
+    restartMsg.setFillColor(sf::Color::White);
+    restartMsg.setPosition(sf::Vector2f(
+        static_cast<float>(finalText.getPosition().x - restartMsg.getString().getSize()),
+        static_cast<float>(finalText.getPosition().y + size * 1.50f) ));
+    m_window.draw(restartMsg);
 }
 
 /**
@@ -615,4 +611,24 @@ T Game::random(const T min, const T max)
     if constexpr (std::is_floating_point<T>::value)
         divisor = static_cast<int>(tmp);
     return min + rand() % divisor;
+}
+
+// GUI debug
+
+std::string Game::m_getTextLine(const std::shared_ptr<Entity>& entity)
+{
+    const auto circle = entity->cShape->circle;
+    const std::string entityText = "\t" + std::to_string(entity->id()) + "\t" + entity->tag()
+        + "\t(" + std::to_string(static_cast<int>(circle.getPosition().x)) + ", "
+        + std::to_string(static_cast<int>(circle.getPosition().y)) + ")\n";
+    return entityText;
+}
+
+void Game::m_getEntityInfo(const std::shared_ptr<Entity>& entity)
+{
+    const auto entityText = m_getTextLine(entity);
+    std::string label = "D##" + std::to_string(entity->id());
+    if (ImGui::Button(label.c_str())) { entity->destroy(); }
+    ImGui::SameLine();
+    ImGui::Text("%s", entityText.c_str());
 }

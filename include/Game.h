@@ -98,6 +98,7 @@ private:
     static std::string m_getTextLine(const std::shared_ptr<Entity>& entity);
     static void m_getEntityInfo(const std::shared_ptr<Entity>& entity);
     void m_showFinalMessage();
+    void m_restartGame();
 
     sf::RenderWindow m_window;
     EntityManager m_entities;
