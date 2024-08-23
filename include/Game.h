@@ -9,6 +9,8 @@
 #include "Entity.h"
 #include "EntityManager.h"
 
+constexpr float kPi = 3.1415f;
+
 struct WindowConfig
 {
     int width, height, framerate;
@@ -43,9 +45,21 @@ struct BulletConfig
 
 struct SpecialWeapon
 {
-    int countdown = 0;
+    int cooldown = 0;
     int lastUsed = 0;
+    int delta = 0;
 };
+
+struct Control
+{
+    bool showMovement = true;
+    bool showRendering = true;
+    bool showCollisiton = true;
+    bool showLifespan = true;
+    bool spawnEnemies = true;
+    bool isPaused = false;
+};
+
 
 class Game
 {
@@ -96,11 +110,11 @@ private:
     PlayerConfig m_playerConfig{};
     EnemyConfig m_enemyConfig{};
     BulletConfig m_bulletConfig{};
+    Control m_control;
 
     int m_score = 0;
     int m_currentFrame = 0;
     bool m_running = true;
-    bool m_paused = false;
     int m_lastEnemySpawnTime = 0;
     std::shared_ptr<Entity> m_player;
     int m_liveCounter = 0;

@@ -83,10 +83,11 @@ You must construct a GUI using ImGui which has the following functionality:
     their tag. 
   - You must also have some way of destroying a given entity by interacting
     with the UI element associated with it.
-- You must be able to change the enemy spawn interval through the GUI
-- You must be able to manually spawn enemies in some way through the GUI
-- You may develop the GUI in any way that contains this functionality, but it must 
-  be easily usable and clearly presented to get full marks.
+  - You may develop the GUI in any way that contains this functionality, but it must
+    be easily usable and clearly presented to get full marks.
+- Optional*: (Changed by me)
+  - You must be able to change the enemy spawn interval through the GUI
+  - You must be able to manually spawn enemies in some way through the GUI
 
 ### Misc:
 - The 'P' key should pause the game 
