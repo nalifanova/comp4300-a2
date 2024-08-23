@@ -24,6 +24,7 @@ For more information about assignment itself, please read the
 mkdir mybuild && cd mybuild
 cmake ..
 make
+cp -r ../assets ../.. # I should think of a better way with paths
 ```
 
 ## Dev Notes

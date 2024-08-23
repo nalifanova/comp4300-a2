@@ -51,6 +51,7 @@ option(IMGUI_SFML_FIND_SFML "Use find_package to find SFML" OFF)
 FetchContent_MakeAvailable(imgui-sfml)
 
 include_directories(include)
+include_directories(assets)
 
 add_executable(${PROJECT_NAME}
     main.cpp
