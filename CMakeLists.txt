@@ -79,3 +79,12 @@ if(WIN32)
         PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${SFML_SOURCE_DIR}/extlibs/bin/$<IF:$<EQUAL:${CMAKE_SIZEOF_VOID_P},8>,x64,x86>/openal32.dll $<TARGET_FILE_DIR:${PROJECT_NAME}>
         VERBATIM)
 endif()
+
+
+file(
+    COPY ${CMAKE_SOURCE_DIR}/assets/data/config.txt
+    DESTINATION ${CMAKE_BINARY_DIR}/assets/data
+)
+
+file(GLOB fonts ${CMAKE_SOURCE_DIR}/assets/fonts/*.ttf)
+file(COPY ${fonst} DESTINATION ${CMAKE_BINARY_DIR}/assets/fonts)
