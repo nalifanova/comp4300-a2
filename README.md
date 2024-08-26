@@ -16,10 +16,11 @@ The main goal of the assigment:
 
 For more information about assignment itself, please read the 
 [ASSIGNMENT.md](ASSIGNMENT02.md) file.
-...
+
+![Geometry Wars](assets/images/geometry_wars.png)
 
 ## How to compile and run
-Or run the script
+
 ```bash
 chmod +x PlayGame.sh && ./PlayGame.sh
 ```
